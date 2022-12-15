@@ -14,13 +14,13 @@ import (
 func main() {
 
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
-	cli.NegotiateAPIVersion(ctx)
+	dockerClient.NegotiateAPIVersion(ctx)
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := dockerClient.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -43,23 +43,20 @@ func main() {
 	_, result, err := prompt.Run()
 
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		return
+		panic(err)
 	}
 	fmt.Printf("You choose %q\n", result)
-	logs, err := cli.ContainerLogs(ctx, result, types.ContainerLogsOptions{
+	logs, err := dockerClient.ContainerLogs(ctx, result, types.ContainerLogsOptions{
 		Follow:     true,
 		ShowStdout: true,
 	})
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		return
+		panic(err)
 	}
 	defer logs.Close()
 	all, err := io.Copy(os.Stdout, logs)
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		return
+		panic(err)
 	}
 	fmt.Println(all)
 }
