@@ -54,9 +54,8 @@ func main() {
 		panic(err)
 	}
 	defer logs.Close()
-	all, err := io.Copy(os.Stdout, logs)
+	_, err = io.Copy(os.Stdout, logs)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(all)
 }
