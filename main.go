@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -30,7 +32,7 @@ func main() {
 
 	var containerNames []string
 	for _, container := range containers {
-		containerNames = append(containerNames, container.Image)
+		containerNames = append(containerNames, container.Names[0])
 	}
 
 	prompt := promptui.Select{
@@ -44,6 +46,20 @@ func main() {
 		fmt.Printf("Prompt failed %v\n", err)
 		return
 	}
-
 	fmt.Printf("You choose %q\n", result)
+	logs, err := cli.ContainerLogs(ctx, result, types.ContainerLogsOptions{
+		Follow:     true,
+		ShowStdout: true,
+	})
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return
+	}
+	defer logs.Close()
+	all, err := io.Copy(os.Stdout, logs)
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return
+	}
+	fmt.Println(all)
 }
